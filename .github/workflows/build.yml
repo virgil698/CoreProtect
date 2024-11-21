@@ -42,7 +42,11 @@ jobs:
           draft: false
           prerelease: false
 
+      - name: Check if build artifact exists
+        run: ls -l ./target/
+
       - name: Upload Release Asset
+        if: success()  # 确保只有在构建成功的情况下才尝试上传
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
