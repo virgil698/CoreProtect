@@ -32,8 +32,12 @@ jobs:
       - name: Build with Maven
         run: mvn -B clean package -DskipTests
 
-      - name: Check if build artifact exists
-        run: ls -l ./target/
+      - name: Check build artifact
+        run: |
+          if [ ! -f ./target/CoreProtect-23.1.jar ]; then
+            echo "Build artifact CoreProtect-23.1.jar does not exist."
+            exit 1
+          fi
 
       - name: Create Release
         id: create_release
@@ -53,10 +57,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/CoreProtect-23.1.jar  # 确保这里的文件名与你的构建输出匹配
+          asset_path: ./target/CoreProtect-23.1.jar
           asset_name: CoreProtect-23.1.jar
           asset_content_type: application/java-archive
-
-      - name: Fail if CoreProtect.jar does not exist
-        if: failure()
-        run: echo "Build artifact CoreProtect.jar does not exist." && exit 1
