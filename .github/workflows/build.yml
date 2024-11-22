@@ -25,12 +25,15 @@ jobs:
       - name: Cache Maven packages
         uses: actions/cache@v1
         with:
-          path: ~/.m2
+          path: ~/.m2/repository
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build
-        run: mvn -B verify
+      - name: Build with Maven
+        run: mvn -B clean package -DskipTests
+
+      - name: Check if build artifact exists
+        run: ls -l ./target/
 
       - name: Create Release
         id: create_release
@@ -38,21 +41,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.run_id }}  # 使用运行ID作为标签名
+          tag_name: ${{ github.run_id }}
           release_name: Release ${{ github.run_id }}
           draft: false
           prerelease: false
 
-      - name: Check if build artifact exists
-        run: ls -l ./target/
-
       - name: Upload Release Asset
-        if: success()  # 确保只有在构建成功的情况下才尝试上传
+        if: success()
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/CoreProtect.jar
-          asset_name: CoreProtect.jar
+          asset_path: ./target/CoreProtect-23.1.jar  # 确保这里的文件名与你的构建输出匹配
+          asset_name: CoreProtect-23.1.jar
           asset_content_type: application/java-archive
+
+      - name: Fail if CoreProtect.jar does not exist
+        if: failure()
+        run: echo "Build artifact CoreProtect.jar does not exist." && exit 1
