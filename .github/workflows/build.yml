@@ -22,25 +22,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Cache Maven packages
-        uses: actions/cache@v1
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Build with Maven
-        run: mvn -B clean package -DskipTests
-
-      - name: List target directory
-        run: ls -la ./target/
-
-      - name: Check build artifact
-        run: |
-          if [ ! -f ./target/CoreProtect-23.1.jar ]; then
-            echo "Build artifact CoreProtect-23.1.jar does not exist."
-            exit 1
-          fi
+      - name: Build
+        run: gradle build
 
       - name: Create Release
         id: create_release
@@ -60,6 +43,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./target/CoreProtect-23.1.jar
-          asset_name: CoreProtect-23.1.jar
+          asset_path: ./out/lib/*CoreProtect*.jar
           asset_content_type: application/java-archive
